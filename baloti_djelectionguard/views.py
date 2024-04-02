@@ -149,7 +149,7 @@ class BalotiInfoView(TemplateView):
         subject = request.POST.get('subject')
         message = request.POST.get('message')
         email_from = settings.DEFAULT_FROM_EMAIL
-        email_to = 'baloti@pitsolutions.ch'
+        email_to = 'jemy.aj@pitsolutions.com'
         if firstname and lastname and email and subject and message:
             merge_data = {
                         'firstname': firstname,
