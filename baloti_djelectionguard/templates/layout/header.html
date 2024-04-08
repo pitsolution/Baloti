@@ -53,6 +53,9 @@
                         <li>
                             <a href={% url 'balotidjelectionguard:Disclaimer' %}>{% trans "Disclaimer" %}</a>
                         </li>
+                        <li>
+                            <a href={% url 'baloti_djelectionguard:Index' %}?contact-us>Contact Us</a>
+                        </li> 
                     </ul>
                     <div class="app-menu-drawer__mobile">
                         {% if user.is_anonymous %}
@@ -152,9 +155,30 @@
     </div>
   </div>
 
-<script>
+  <script>
     $(document).ready(function(){
-        var languageObject = '{{LANGUAGE}}';
-        localStorage.setItem('languageObject', JSON.stringify(languageObject));
+    var languageObject = '{{LANGUAGE}}';
+    localStorage.setItem('languageObject', JSON.stringify(languageObject));
+        if (window.location.href.indexOf("?") > -1) {
+            jQuery("html, body").animate(
+                {
+                    scrollTop: jQuery(".app-contact").offset().top
+                },
+                "slow",
+                function() {
+                    setTimeout(function() {
+                    removeQueryString();
+                    }, 2000); 
+                }
+            );
+        }
     });
+
+    function removeQueryString() {
+        var url = window.location.href;
+        var newUrl = url.split('?')[0];
+        history.replaceState({}, document.title, newUrl); 
+    }
+
+
 </script>
