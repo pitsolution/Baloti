@@ -190,7 +190,7 @@
                             <h2 class="app-title app-h2 text-outfit-regular">{% trans "Feel free to <br> contact us" %}</h2>
                         </div>
                         <div class="col-sm-7">
-                            <form class="app-contact__form">
+                            <form class="app-contact__form" id="contactForm">
                             {% csrf_token %}
                                 <div class="row g-0">
                                     <div class="col">
@@ -219,15 +219,54 @@
                                 <div class="row">
                                     <div class="col-md-6">
                                 </div>
-                                <div class="col-md-12 col-lg-6">
-                                    <button type="button" class="btn btn-outline btn-contact" id="infomailSubmit">{% trans "SEND" %}</button>
-                                  </div>
+                                <div class="g-recaptcha" data-sitekey="6LcJnosqAAAAAOf_9ixi4WRWB9kzM5vsOklwb4ph"></div>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                    </div>
+                                    <div class="col-md-12 col-lg-6">
+                                        <button type="button" class="btn btn-outline btn-contact" id="infomailSubmit">{% trans "SEND" %}</button>
+                                    </div>
                                 </div>
                             </form>
                         </div>
                   </div>
               </div>
-          </section>
+            </section>
+            <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+            <script>
+                document.addEventListener("DOMContentLoaded", function() {
+                    document.getElementById("infomailSubmit").addEventListener("click", function(event) {
+                        event.preventDefault(); 
+                        var recaptchaResponse = grecaptcha.getResponse();
+                        if (recaptchaResponse.length === 0) {
+                            alert("Please verify that you are not a robot.");
+                            return false;
+                        }
+                        var formData = new FormData(document.querySelector(".app-contact__form"));
+                        formData.append('g-recaptcha-response', recaptchaResponse);
+                        fetch(window.location.href, { 
+                            method: "POST",
+                            body: formData,
+                            headers: {
+                                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value  // Include CSRF token
+                            }
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                alert("Message sent successfully!");
+                                document.getElementById("contactForm").reset();  // Optionally reset the form
+                            } else {
+                                alert("Error: " + data.message);
+                            }
+                        })
+                        .catch(error => {
+                            console.error("Error:", error);
+                            alert("There was an issue sending the message.");
+                        });
+                    });
+                });
+            </script>
 
            <!-- Footer Section -->
            <footer class="app-footer app-footer--landing">

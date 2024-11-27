@@ -1,4 +1,5 @@
 import json
+import requests
 from django.shortcuts import render
 from djelectionguard.models import Contest, Candidate, ParentContest
 from .models import ParentContesti18n, Contesti18n
@@ -15,6 +16,7 @@ from django.template.loader import render_to_string
 from django.core.mail import EmailMultiAlternatives
 from deep_translator import GoogleTranslator
 from djlang.models import Language
+
 
 def getParentDetails(parent):
         """
@@ -136,42 +138,52 @@ class BalotiInfoView(TemplateView):
         return render(request, 'landing-en.html')
 
     def post(self, request):
-        """
-        Args:
-            request (Request): Http request object
-
-        Returns:
-            html : returns landing-en.html html file
-        """
-        firstname = request.POST.get('firstname')
-        lastname = request.POST.get('lastname')
-        email = request.POST.get('email')
-        subject = request.POST.get('subject')
-        message = request.POST.get('message')
-        email_from = settings.DEFAULT_FROM_EMAIL
-        email_to = 'kontakt@pitsolutions.ch'
-        if firstname and lastname and email and subject and message:
-            merge_data = {
-                        'firstname': firstname,
-                        'lastname': lastname,
-                        'email': email,
-                        'message': message
-                        }
-            html_body = render_to_string("contactinfo_mail.html", merge_data)
-
-            message = EmailMultiAlternatives(
-               subject=subject,
-               body="mail testing",
-               from_email=email_from,
-               to=[email_to],
-            )
-            message.attach_alternative(html_body, "text/html")
-            message.send()
-            responseData = {}
-            return HttpResponse(json.dumps(responseData), content_type="application/json")
+        captcha_response = request.POST.get('g-recaptcha-response')
+        if not captcha_response:
+            return HttpResponseBadRequest('reCAPTCHA response is missing.')
+        recaptcha_url = 'https://www.google.com/recaptcha/api/siteverify'
+        recaptcha_data = {
+            'secret': settings.RECAPTCHA_PRIVATE_KEY, 
+            'response': captcha_response,
+        }
+        try:
+            recaptcha_response = requests.post(recaptcha_url, data=recaptcha_data)
+            recaptcha_result = recaptcha_response.json()
+        except requests.exceptions.RequestException as e:
+            return HttpResponseBadRequest(f"Error during reCAPTCHA validation: {str(e)}")
+        if not recaptcha_result.get('success'):
+            return HttpResponseBadRequest('reCAPTCHA verification failed.')
         else:
-            return HttpResponseBadRequest()
-
+            firstname = request.POST.get('firstname')
+            lastname = request.POST.get('lastname')
+            email = request.POST.get('email')
+            subject = request.POST.get('subject')
+            message = request.POST.get('message')
+            if not all([firstname, lastname, email, subject, message]):
+                return HttpResponseBadRequest('All fields are required.')
+            email_from = settings.DEFAULT_FROM_EMAIL
+            email_to = 'jemy.aj@pitsolutions.ch'
+            merge_data = {
+                'firstname': firstname,
+                'lastname': lastname,
+                'email': email,
+                'message': message,
+            }
+            html_body = render_to_string("contactinfo_mail.html", merge_data)
+            try:
+                email_message = EmailMultiAlternatives(
+                    subject=subject,
+                    body="This is a contact message from your website.",
+                    from_email=email_from,
+                    to=[email_to],
+                )
+                email_message.attach_alternative(html_body, "text/html")
+                email_message.send()
+            except Exception as e:
+                return HttpResponseBadRequest(f"Error sending email: {str(e)}")
+            responseData = {'message': 'Your message has been sent successfully!'}
+            return JsonResponse(responseData)
+            
 
 class BalotiContestListView(TemplateView):
     """
