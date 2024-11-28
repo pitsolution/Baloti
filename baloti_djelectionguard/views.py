@@ -3,19 +3,18 @@ import requests
 from django.shortcuts import render
 from djelectionguard.models import Contest, Candidate, ParentContest
 from .models import ParentContesti18n, Contesti18n
-from django.db.models import ObjectDoesNotExist, Q
 from django.http import *
 from django.views.generic import TemplateView
 from djlang.utils import gettext as _
 from electeez_common.components import *
 import hashlib
 from django.utils.translation import get_language
-from django.views.decorators.csrf import csrf_exempt,csrf_protect
 from electeez_auth.models import User
 from django.template.loader import render_to_string
 from django.core.mail import EmailMultiAlternatives
 from deep_translator import GoogleTranslator
 from djlang.models import Language
+from django.http import JsonResponse
 
 
 def getParentDetails(parent):
@@ -138,52 +137,48 @@ class BalotiInfoView(TemplateView):
         return render(request, 'landing-en.html')
 
     def post(self, request):
-        captcha_response = request.POST.get('g-recaptcha-response')
+        """
+        Args:
+            request (Request): Http request object
+ 
+        Returns:
+            html : returns landing-en.html html file
+        """
+        captcha_response = request.POST.get('g-recaptcha-response', '')
         if not captcha_response:
-            return HttpResponseBadRequest('reCAPTCHA response is missing.')
-        recaptcha_url = 'https://www.google.com/recaptcha/api/siteverify'
-        recaptcha_data = {
-            'secret': settings.RECAPTCHA_PRIVATE_KEY, 
-            'response': captcha_response,
-        }
+            return JsonResponse({'error': 'reCAPTCHA response is missing.'}, status=400)     
         try:
-            recaptcha_response = requests.post(recaptcha_url, data=recaptcha_data)
+            recaptcha_response = requests.post('https://www.google.com/recaptcha/api/siteverify', 
+                                 data={
+                                    'secret': settings.RECAPTCHA_PRIVATE_KEY, 
+                                    'response': captcha_response})
             recaptcha_result = recaptcha_response.json()
         except requests.exceptions.RequestException as e:
-            return HttpResponseBadRequest(f"Error during reCAPTCHA validation: {str(e)}")
+            return JsonResponse({'error': f"Error during reCAPTCHA validation: {str(e)}"}, status=400)
         if not recaptcha_result.get('success'):
-            return HttpResponseBadRequest('reCAPTCHA verification failed.')
-        else:
-            firstname = request.POST.get('firstname')
-            lastname = request.POST.get('lastname')
-            email = request.POST.get('email')
-            subject = request.POST.get('subject')
-            message = request.POST.get('message')
-            if not all([firstname, lastname, email, subject, message]):
-                return HttpResponseBadRequest('All fields are required.')
-            email_from = settings.DEFAULT_FROM_EMAIL
-            email_to = 'jemy.aj@pitsolutions.ch'
-            merge_data = {
-                'firstname': firstname,
-                'lastname': lastname,
-                'email': email,
-                'message': message,
-            }
-            html_body = render_to_string("contactinfo_mail.html", merge_data)
-            try:
-                email_message = EmailMultiAlternatives(
-                    subject=subject,
-                    body="This is a contact message from your website.",
-                    from_email=email_from,
-                    to=[email_to],
-                )
-                email_message.attach_alternative(html_body, "text/html")
-                email_message.send()
-            except Exception as e:
-                return HttpResponseBadRequest(f"Error sending email: {str(e)}")
-            responseData = {'message': 'Your message has been sent successfully!'}
-            return JsonResponse(responseData)
-            
+            return JsonResponse({'error': 'reCAPTCHA verification failed.'}, status=400)
+        if not all([request.POST.get('firstname'), request.POST.get('lastname'), request.POST.get('email'), request.POST.get('subject'), request.POST.get('message')]):
+            return JsonResponse({'error': 'All fields are required.'}, status=400)
+        merge_data = {
+            'firstname': request.POST.get('firstname'),
+            'lastname': request.POST.get('lastname'),
+            'email': request.POST.get('email'),
+            'message': request.POST.get('message'),
+        }
+        html_body = render_to_string("contactinfo_mail.html", merge_data)
+        try:
+            email_message = EmailMultiAlternatives(
+                subject=request.POST.get('subject'),
+                body="This is a contact message from your website.",
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                to=[settings.CONTACT_EMAIL_TO],
+            )
+            email_message.attach_alternative(html_body, "text/html")
+            email_message.send()
+        except Exception as e:
+            return JsonResponse({'error': f"Error sending email: {str(e)}"}, status=400)
+        return JsonResponse({'message': 'Your message has been sent successfully!'})
+
 
 class BalotiContestListView(TemplateView):
     """

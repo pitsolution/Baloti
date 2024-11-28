@@ -235,37 +235,47 @@
             <script src="https://www.google.com/recaptcha/api.js" async defer></script>
             <script>
                 document.addEventListener("DOMContentLoaded", function() {
-                    document.getElementById("infomailSubmit").addEventListener("click", function(event) {
-                        event.preventDefault(); 
-                        var recaptchaResponse = grecaptcha.getResponse();
-                        if (recaptchaResponse.length === 0) {
-                            alert("Please verify that you are not a robot.");
-                            return false;
-                        }
-                        var formData = new FormData(document.querySelector(".app-contact__form"));
-                        formData.append('g-recaptcha-response', recaptchaResponse);
-                        fetch(window.location.href, { 
-                            method: "POST",
-                            body: formData,
-                            headers: {
-                                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value  // Include CSRF token
-                            }
-                        })
-                        .then(response => response.json())
-                        .then(data => {
-                            if (data.success) {
-                                alert("Message sent successfully!");
-                                document.getElementById("contactForm").reset();  // Optionally reset the form
-                            } else {
-                                alert("Error: " + data.message);
-                            }
-                        })
-                        .catch(error => {
-                            console.error("Error:", error);
-                            alert("There was an issue sending the message.");
-                        });
-                    });
+    document.getElementById("infomailSubmit").addEventListener("click", function(event) {
+        event.preventDefault();
+        var recaptchaResponse = grecaptcha.getResponse();
+        
+        if (recaptchaResponse.length === 0) {
+            alert("Please verify that you are not a robot.");
+            return false;
+        }
+        
+        var formData = new FormData(document.querySelector(".app-contact__form"));
+        formData.append('g-recaptcha-response', recaptchaResponse);
+        
+        fetch(window.location.href, { 
+            method: "POST",
+            body: formData,
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value  // Include CSRF token
+            }
+        })
+        .then(response => {
+            // Check if the response is OK (200 status code)
+            if (!response.ok) {
+                return response.json().then(errorData => {
+                    throw new Error(errorData.error || 'Unknown error occurred');
                 });
+            }
+            return response.json();  // Parse JSON if response is successful
+        })
+        .then(data => {
+            if (data.message) {
+                alert(data.message);
+                document.getElementById("contactForm").reset();  // Optionally reset the form
+            }
+        })
+        .catch(error => {
+            console.error("Error:", error);
+            alert("There was an issue sending the message: " + error.message);
+        });
+    });
+});
+
             </script>
 
            <!-- Footer Section -->
