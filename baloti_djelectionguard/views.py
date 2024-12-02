@@ -151,7 +151,7 @@ class BalotiInfoView(TemplateView):
             recaptcha_response = requests.post(
                 'https://www.google.com/recaptcha/api/siteverify',
                 data={
-                    'secret': '6Ldk2Y8qAAAAAOmZYK6JgsWJVMgQkOaAGWc35Lju',
+                    'secret': settings.RECAPTCHA_PUBLIC_KEY,
                     'response': captcha_token
                 }
             )

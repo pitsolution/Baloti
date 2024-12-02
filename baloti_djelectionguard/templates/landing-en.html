@@ -239,7 +239,7 @@
                         grecaptcha.ready(function() {
                             document.getElementById("infomailSubmit").addEventListener("click", function(event) {
                                 event.preventDefault();
-                                grecaptcha.execute('6Ldk2Y8qAAAAABo4thmgdWq4u9gMo4SQAqS1SiM8', {action: 'contact_form'}).then(function(token) {
+                                grecaptcha.execute('{{settins.RECAPTCHA_PUBLIC_KEY}}', {action: 'contact_form'}).then(function(token) {
                                     if (!token) {
                                         console.log("Error: reCAPTCHA token is missing.");
                                         return; 

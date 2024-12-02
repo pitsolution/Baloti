@@ -1,19 +1,19 @@
 $(document).ready(function(){
-var myJson = {}
-get_something()
-function get_something(){
-    $.getJSON("/static/translations.json", function(json){
-        myJson = json;
-        console.log(myJson,'jgdgrsfjh')
+    var myJson = {}
+    get_something()
+    function get_something(){
+        $.getJSON("/static/translations.json", function(json){
+            myJson = json;
+            console.log(myJson,'jgdgrsfjh')
 
-    });
-}
+        });
+    }
     if (localStorage.getItem('languageObject') == null){
         var lanuage = "en";
-        
+   
     }
     else {
-var language = localStorage.getItem('languageObject').replaceAll('"', '');
+        var language = localStorage.getItem('languageObject').replaceAll('"', '');
     }
 
     
@@ -302,7 +302,7 @@ var language = localStorage.getItem('languageObject').replaceAll('"', '');
         $(this).closest(".app-toast").addClass("d-none");
     });
 
-    $("#infomailSubmit").on("click", function() {
+    $("#infomailSubmit").on("click", function(){
         var pattern = new RegExp(/^[+a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/i);
         var firstname = document.getElementById('id_firstname').value;
         var lastname = document.getElementById('id_lastname').value;
@@ -310,78 +310,60 @@ var language = localStorage.getItem('languageObject').replaceAll('"', '');
         var subject = document.getElementById('id_subject').value;
         var message = document.getElementById('id_message').value;
         var csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-        if (!firstname || !lastname || !email || !subject || !message) {
+        // if (!$("#info_mailsent").hasClass("d-none") ) {
+        //     $("#info_mailsent").addClass("d-none");
+        // }
+        if(!firstname || !lastname || !email || !subject || !message){
             $("#info_mailsent").removeClass("d-none");
+            var trans_text = $("html").attr("lang")
+            // $("#message_text").text(myJson['text_b'][0][trans_text]);
             $("#message_text").text("Fill all the fields");
             $("#info_mailsent").addClass("error");
             $(".app-toast__tick").addClass("d-none");
-            return;
         }
-        else if (!pattern.test(email)) {
+        else if(!pattern.test(email)){
             $("#info_mailsent").removeClass("d-none");
+            var trans_text = $("html").attr("lang")
+            // $("#message_text").text(myJson['text_d'][0][trans_text]);
             $("#message_text").text("Invalid Email Address");
+
             $("#info_mailsent").addClass("error");
             $(".app-toast__tick").addClass("d-none");
-            return;
         }
-        grecaptcha.execute('6Ldk2Y8qAAAAABo4thmgdWq4u9gMo4SQAqS1SiM8', { action: 'contact_form' }).then(function(token) {
-            if (!token) {
-                $("#info_mailsent").removeClass("d-none");
-                $("#message_text").text("Error: reCAPTCHA token is missing.");
-                $("#info_mailsent").addClass("error");
-                $(".app-toast__tick").addClass("d-none");
-                return; 
-            }
-            var recaptchaInput = document.createElement('input');
-            recaptchaInput.type = 'hidden';
-            recaptchaInput.name = 'recaptcha_token';
-            recaptchaInput.value = token;
-            document.querySelector(".app-contact__form").appendChild(recaptchaInput);
-            var formData = new FormData(document.querySelector(".app-contact__form"));
+        else{
             $.ajax({
                 type: "POST",
-                url: '/en/info/submit', 
-                data: formData,
-                processData: false,  
-                contentType: false, 
-                headers: { 'X-CSRFToken': csrftoken },
-                beforeSend: function() {
-                    $('body').append('<div class="app-loaderwrap"><div class="app-loader"></div></div>');
-                },
-                complete: function() {
-                    $('.app-loaderwrap').remove();
-                },
-                success: function(data) {
-                    if (data.error && data.error.includes('reCAPTCHA')) {
+                url: '/'+ "en" + '/info/submit',
+                data: {'firstname': firstname, 'lastname': lastname, 'email': email, 'subject': subject, 'message': message},
+                headers: {'X-CSRFToken': csrftoken},
+                mode: 'same-origin',
+                success: function(data){
+                        document.getElementById('id_firstname').value = "";
+                        document.getElementById('id_lastname').value = "";
+                        document.getElementById('id_email').value = "";
+                        document.getElementById('id_subject').value = "";
+                        document.getElementById('id_message').value = "";
+                        var trans_text = $("html").attr("lang")
+                        $("#message_text").text("Mail sent successfully");
                         $("#info_mailsent").removeClass("d-none");
-                        $("#message_text").text("reCAPTCHA verification failed: " + data.error);
-                        $("#info_mailsent").addClass("error");
-                        $(".app-toast__tick").addClass("d-none");
-                        return;
-                    }
-                    document.getElementById('id_firstname').value = "";
-                    document.getElementById('id_lastname').value = "";
-                    document.getElementById('id_email').value = "";
-                    document.getElementById('id_subject').value = "";
-                    document.getElementById('id_message').value = "";
-                    $("#info_mailsent").removeClass("d-none");
-                    $("#info_mailsent").removeClass("error");
-                    $("#message_text").text("Mail sent successfully");
-                    $(".app-toast__tick").removeClass("d-none");
+                        $("#info_mailsent").removeClass("error");
+                        $(".app-toast__tick").removeClass("d-none");
                 },
-                error: function(xhr) {
-                    if (xhr.status == 400) {
-                        var errorMsg = xhr.responseJSON && xhr.responseJSON.error ? xhr.responseJSON.error : "Service not available";
-                        $("#info_mailsent").removeClass("d-none");
+                error:function (xhr, ajaxOptions, thrownError){
+                    if(xhr.status==400) {
+                        var trans_text = $("html").attr("lang")
+                        $("#message_text").text("Service not available");
+                        $("#info_mailsent").removeClass("d-none")
                         $("#info_mailsent").addClass("error");
-                        $("#message_text").text(errorMsg);
                         $(".app-toast__tick").addClass("d-none");
                     }
                 }
+                
             });
-        });
+        }
+        
     });
-    
+
 
     $("#howitworksbtn").click(function() {
         $('html, body').animate({
