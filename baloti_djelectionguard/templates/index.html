@@ -294,8 +294,8 @@
                 <h2 class="app-title app-h2 text-outfit-regular">{% trans "Feel free to <br> contact us" %}</h2>
             </div>
             <div class="col-sm-7">
-                <form class="app-contact__form">
-                {% csrf_token %}
+                <form class="app-contact__form" id="contactForm">
+                    {% csrf_token %}
                     <div class="row g-0">
                         <div class="col">
                             <input id="id_firstname" name="firstname" type="text" class="form-control" required>
@@ -322,16 +322,70 @@
                     </div>
                     <div class="row">
                         <div class="col-md-6">
-                    </div>
-                    <div class="col-md-12 col-lg-6">
-                        <button type="button" class="btn btn-outline btn-contact" id="infomailSubmit">{% trans "SEND" %}</button>
-                      </div>
-                    </div>
-                </form>
+                        </div>
+                        <input type="hidden" name="recaptcha_token" id="recaptcha_token">
+                        <div class="row">
+                            <div class="col-md-6">
+                            </div>
+                            <div class="col-md-12 col-lg-6">
+                                <button type="button" class="btn btn-outline btn-contact" id="infomailSubmit">{% trans "SEND" %}</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
             </div>
-      </div>
-  </div>
+        </div>
 </section>
+
+<script src="https://www.google.com/recaptcha/api.js?render=6Ldk2Y8qAAAAABo4thmgdWq4u9gMo4SQAqS1SiM8"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        grecaptcha.ready(function() {
+            document.getElementById("infomailSubmit").addEventListener("click", function(event) {
+                event.preventDefault();
+                grecaptcha.execute('6Ldk2Y8qAAAAABo4thmgdWq4u9gMo4SQAqS1SiM8', {action: 'contact_form'}).then(function(token) {
+                    if (!token) {
+                        console.log("Error: reCAPTCHA token is missing.");
+                        return; 
+                    }
+                    var recaptchaInput = document.createElement('input');
+                    recaptchaInput.type = 'hidden';
+                    recaptchaInput.name = 'recaptcha_token';
+                    recaptchaInput.value = token;
+                    document.querySelector(".app-contact__form").appendChild(recaptchaInput);
+                    var formData = new FormData(document.querySelector(".app-contact__form"));
+                    fetch(window.location.href, { 
+                        method: "POST",
+                        body: formData,
+                        headers: {
+                            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value  // Include CSRF token
+                        }
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            return response.json().then(errorData => {
+                                throw new Error(errorData.error || 'Unknown error occurred');
+                            });
+                        }
+                        return response.json();  
+                    })
+                    .then(data => {
+                        if (data.message) {
+                            console.log("Success:", data.message);
+                        }
+                    })
+                    .catch(error => {
+                        //console.error("Error:", error);
+                        $("#info_mailsent").removeClass("d-none");
+                        $("#info_mailsent").addClass("error");
+                        $("#message_text").text(error.message);
+                        $(".app-toast__tick").addClass("d-none");
+                    });
+                });
+            });
+        });
+    });
+</script>
 
 <!-- Then put toasts within -->
 

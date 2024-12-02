@@ -140,23 +140,26 @@ class BalotiInfoView(TemplateView):
         """
         Args:
             request (Request): Http request object
- 
+
         Returns:
-            html : returns landing-en.html html file
+            JsonResponse: response with status message
         """
-        captcha_response = request.POST.get('g-recaptcha-response', '')
-        if not captcha_response:
-            return JsonResponse({'error': 'reCAPTCHA response is missing.'}, status=400)     
+        captcha_token = request.POST.get('recaptcha_token', '')
+        if not captcha_token:
+            return JsonResponse({'error': 'reCAPTCHA token is missing.'}, status=400)
         try:
-            recaptcha_response = requests.post('https://www.google.com/recaptcha/api/siteverify', 
-                                 data={
-                                    'secret': settings.RECAPTCHA_PRIVATE_KEY, 
-                                    'response': captcha_response})
+            recaptcha_response = requests.post(
+                'https://www.google.com/recaptcha/api/siteverify',
+                data={
+                    'secret': '6Ldk2Y8qAAAAAOmZYK6JgsWJVMgQkOaAGWc35Lju',
+                    'response': captcha_token
+                }
+            )
             recaptcha_result = recaptcha_response.json()
         except requests.exceptions.RequestException as e:
             return JsonResponse({'error': f"Error during reCAPTCHA validation: {str(e)}"}, status=400)
-        if not recaptcha_result.get('success'):
-            return JsonResponse({'error': 'reCAPTCHA verification failed.'}, status=400)
+        if not recaptcha_result.get('success') or recaptcha_result.get('score') < 0.5:
+            return JsonResponse({'error': 'reCAPTCHA verification failed or score is too low.'}, status=400)
         if not all([request.POST.get('firstname'), request.POST.get('lastname'), request.POST.get('email'), request.POST.get('subject'), request.POST.get('message')]):
             return JsonResponse({'error': 'All fields are required.'}, status=400)
         merge_data = {
