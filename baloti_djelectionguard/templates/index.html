@@ -331,10 +331,11 @@
                                 <button type="button" class="btn btn-outline btn-contact" id="infomailSubmit">{% trans "SEND" %}</button>
                             </div>
                         </div>
-                    </form>
-                </div>
+                    </div>
+                </form>
             </div>
         </div>
+    </div>
 </section>
 
 <div class="app-toast alert alert-dismissible d-none" id="info_mailsent" role="alert" aria-live="assertive" aria-atomic="true">
@@ -393,6 +394,7 @@ document.addEventListener("DOMContentLoaded", function () {
                         $("#info_mailsent").removeClass("d-none");
                         $("#info_mailsent").removeClass("error");
                         $(".app-toast__tick").removeClass("d-none");
+                        submitButton.disabled = false;
                     },
                     error: function (xhr) {
                         console.error("AJAX Error:", xhr);

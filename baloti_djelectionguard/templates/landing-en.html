@@ -227,6 +227,7 @@
                                             <button type="button" class="btn btn-outline btn-contact" id="infomailSubmit">{% trans "SEND" %}</button>
                                         </div>
                                     </div>
+                                </div>
                             </form>
                         </div>
                     </div>
@@ -289,9 +290,9 @@
                                     $("#info_mailsent").removeClass("d-none");
                                     $("#info_mailsent").removeClass("error");
                                     $(".app-toast__tick").removeClass("d-none");
+                                    submitButton.disabled = false;
                                 },
                                 error: function (xhr) {
-                                    console.error("AJAX Error:", xhr);
                                     if (xhr.responseJSON && xhr.responseJSON.error) {
                                         displayError(xhr.responseJSON.error);
                                     } else {
@@ -301,7 +302,6 @@
                             });
                         })
                         .catch(function (error) {
-                            console.error("reCAPTCHA error:", error);
                             displayError("reCAPTCHA encountered an issue.");
                         })
                         .finally(function () {
