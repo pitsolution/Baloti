@@ -390,8 +390,8 @@ document.addEventListener("DOMContentLoaded", function () {
                         document.getElementById('id_email').value = "";
                         document.getElementById('id_subject').value = "";
                         document.getElementById('id_message').value = "";
-                        $("#message_text").text("Mail sent successfully.");
-                        $("#info_mailsent").removeClass("d-none");
+                        //$("#message_text").text("Mail sent successfully.");
+                        $("#info_mailsent").addClass("d-none");
                         $("#info_mailsent").removeClass("error");
                         $(".app-toast__tick").removeClass("d-none");
                         submitButton.disabled = false;
