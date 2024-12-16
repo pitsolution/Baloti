@@ -352,13 +352,11 @@ document.addEventListener("DOMContentLoaded", function () {
     document.getElementById("infomailSubmit").addEventListener("click", function (event) {
         event.preventDefault();
         const submitButton = document.getElementById("infomailSubmit");
-        submitButton.disabled = true; // Disable send button on click
-
+        submitButton.disabled = true;
         if (!validateForm()) {
             submitButton.disabled = false;
             return;
         }
-
         grecaptcha.execute('6Ldk2Y8qAAAAABo4thmgdWq4u9gMo4SQAqS1SiM8', { action: 'contact_form' })
             .then(function (token) {
                 if (!token) {
@@ -366,9 +364,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     submitButton.disabled = false;
                     return;
                 }
-
                 document.getElementById('recaptcha_token').value = token;
-
                 $.ajax({
                     type: "POST",
                     url: '/en/info/submit',
@@ -384,38 +380,30 @@ document.addEventListener("DOMContentLoaded", function () {
                         'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
                     },
                     success: function (data) {
-                        console.log("Success response from server:", data);
-                        document.getElementById('id_firstname').value = "";
-                        document.getElementById('id_lastname').value = "";
-                        document.getElementById('id_email').value = "";
-                        document.getElementById('id_subject').value = "";
-                        document.getElementById('id_message').value = "";
-                        //$("#message_text").text("Mail sent successfully.");
-                        $("#info_mailsent").addClass("d-none");
-                        $("#info_mailsent").removeClass("error");
-                        $(".app-toast__tick").removeClass("d-none");
-                        submitButton.disabled = false;
+                        resetFormFields();
+                        displaySuccess("Mail sent successfully.");
+                        if (data.recaptcha_result) {
+                            console.log('reCAPTCHA validation response:', data.recaptcha_result);
+                        }
                     },
                     error: function (xhr) {
-                        console.error("AJAX Error:", xhr);
                         if (xhr.responseJSON && xhr.responseJSON.error) {
                             displayError(xhr.responseJSON.error);
                         } else {
                             displayError("Unexpected server error.");
                         }
+                    },
+                    complete: function () {
+                        submitButton.disabled = false;
                     }
                 });
             })
             .catch(function (error) {
-                console.error("reCAPTCHA error:", error);
                 displayError("reCAPTCHA encountered an issue.");
-            })
-            .finally(function () {
-                submitButton.disabled = false; // Re-enable after all AJAX/reCAPTCHA logic finishes
+                submitButton.disabled = false;
             });
     });
 });
-
 function validateForm() {
     const firstname = document.getElementById('id_firstname').value.trim();
     const lastname = document.getElementById('id_lastname').value.trim();
@@ -423,12 +411,10 @@ function validateForm() {
     const subject = document.getElementById('id_subject').value.trim();
     const message = document.getElementById('id_message').value.trim();
     const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
     if (!firstname || !lastname || !email || !subject || !message) {
         displayError("Please fill out all fields.");
         return false;
     }
-
     if (!emailPattern.test(email)) {
         displayError("Invalid Email Address.");
         return false;
@@ -436,12 +422,36 @@ function validateForm() {
 
     return true;
 }
-
 function displayError(message) {
     $("#info_mailsent").removeClass("d-none");
     $("#info_mailsent").addClass("error");
     $("#message_text").text(message);
     $(".app-toast__tick").addClass("d-none");
+    setTimeout(function() {
+        hideMessage();
+    }, 3000);
+}
+function displaySuccess(message) {
+    $("#info_mailsent").removeClass("d-none");
+    $("#info_mailsent").removeClass("error");
+    $("#message_text").text(message);
+    $(".app-toast__tick").removeClass("d-none");
+    setTimeout(function() {
+        hideMessage();
+    }, 3000);
+}
+function hideMessage() {
+    $("#info_mailsent").addClass("d-none");
+    $("#info_mailsent").removeClass("error");
+    $("#message_text").text("");
+    $(".app-toast__tick").addClass("d-none");
+}
+function resetFormFields() {
+    document.getElementById('id_firstname').value = "";
+    document.getElementById('id_lastname').value = "";
+    document.getElementById('id_email').value = "";
+    document.getElementById('id_subject').value = "";
+    document.getElementById('id_message').value = "";
 }
 </script>
 

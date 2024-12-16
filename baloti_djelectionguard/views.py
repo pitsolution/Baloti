@@ -151,7 +151,7 @@ class BalotiInfoView(TemplateView):
             recaptcha_response = requests.post(
                 'https://www.google.com/recaptcha/api/siteverify',
                 data={
-                    'secret': settings.RECAPTCHA_PRIVATE_KEY,
+                    'secret': '6Ldk2Y8qAAAAAOmZYK6JgsWJVMgQkOaAGWc35Lju',
                     'response': captcha_token
                 }
             )
@@ -180,7 +180,10 @@ class BalotiInfoView(TemplateView):
             email_message.send()
         except Exception as e:
             return JsonResponse({'error': f"Error sending email: {str(e)}"}, status=400)
-        return JsonResponse({'message': 'Your message has been sent successfully!'})
+        return JsonResponse({
+        'message': 'Your message has been sent successfully!',
+        'recaptcha_result': recaptcha_result
+    })
 
 
 class BalotiContestListView(TemplateView):
