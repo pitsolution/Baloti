@@ -1,19 +1,19 @@
 $(document).ready(function(){
-var myJson = {}
-get_something()
-function get_something(){
-    $.getJSON("/static/translations.json", function(json){
-        myJson = json;
-        console.log(myJson,'jgdgrsfjh')
+    var myJson = {}
+    get_something()
+    function get_something(){
+        $.getJSON("/static/translations.json", function(json){
+            myJson = json;
+            console.log(myJson,'jgdgrsfjh')
 
-    });
-}
+        });
+    }
     if (localStorage.getItem('languageObject') == null){
         var lanuage = "en";
-        
+   
     }
     else {
-var language = localStorage.getItem('languageObject').replaceAll('"', '');
+        var language = localStorage.getItem('languageObject').replaceAll('"', '');
     }
 
     
@@ -309,7 +309,6 @@ var language = localStorage.getItem('languageObject').replaceAll('"', '');
         var email = document.getElementById('id_email').value;
         var subject = document.getElementById('id_subject').value;
         var message = document.getElementById('id_message').value;
-        
         var csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
         // if (!$("#info_mailsent").hasClass("d-none") ) {
         //     $("#info_mailsent").addClass("d-none");
@@ -319,9 +318,6 @@ var language = localStorage.getItem('languageObject').replaceAll('"', '');
             var trans_text = $("html").attr("lang")
             // $("#message_text").text(myJson['text_b'][0][trans_text]);
             $("#message_text").text("Fill all the fields");
-
-
-
             $("#info_mailsent").addClass("error");
             $(".app-toast__tick").addClass("d-none");
         }
@@ -341,28 +337,14 @@ var language = localStorage.getItem('languageObject').replaceAll('"', '');
                 data: {'firstname': firstname, 'lastname': lastname, 'email': email, 'subject': subject, 'message': message},
                 headers: {'X-CSRFToken': csrftoken},
                 mode: 'same-origin',
-                beforeSend: function(){
-                                $('body').append('<div class="app-loaderwrap"><div class="app-loader"></div></div>');
-                            },
-                            complete: function(){
-                                $('.app-loaderwrap').remove();                       
-                            },
-
-
                 success: function(data){
-
                         document.getElementById('id_firstname').value = "";
                         document.getElementById('id_lastname').value = "";
                         document.getElementById('id_email').value = "";
                         document.getElementById('id_subject').value = "";
                         document.getElementById('id_message').value = "";
                         var trans_text = $("html").attr("lang")
-                          // $("#message_text").text(myJson['text_a'][0][trans_text]);
                         $("#message_text").text("Mail sent successfully");
-
-
-
-
                         $("#info_mailsent").removeClass("d-none");
                         $("#info_mailsent").removeClass("error");
                         $(".app-toast__tick").removeClass("d-none");
@@ -370,9 +352,7 @@ var language = localStorage.getItem('languageObject').replaceAll('"', '');
                 error:function (xhr, ajaxOptions, thrownError){
                     if(xhr.status==400) {
                         var trans_text = $("html").attr("lang")
-                        // $("#message_text").text(myJson['text_c'][0][trans_text]);
                         $("#message_text").text("Service not available");
-
                         $("#info_mailsent").removeClass("d-none")
                         $("#info_mailsent").addClass("error");
                         $(".app-toast__tick").addClass("d-none");
